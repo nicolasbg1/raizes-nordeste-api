@@ -6,5 +6,224 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+}
+
+// ------- enums ----
+
+enum PerfilUsuario {
+  ADMIN
+  GERENTE
+  ATENDENTE
+  COZINHA
+  CLIENTE
+}
+
+enum CanalPedido {
+  APP
+  TOTEM
+  BALCAO
+  PICKUP
+  WEB
+}
+
+enum StatusPedido {
+  RECEBIDO
+  EM_PREPARO
+  PRONTO
+  ENTREGUE
+  CANCELADO
+}
+
+enum TipoMovimentacao {
+  ENTRADA
+  SAIDA
+}
+
+enum TipoPonto {
+  ACUMULO
+  RESGATE
+}
+
+enum StatusPagamento {
+  PENDENTE
+  APROVADO
+  RECUSADO
+}
+
+// ------- models ----
+
+model Usuario {
+  id               Int           @id @default(autoincrement())
+  nome             String
+  email            String        @unique
+  senha            String
+  perfil           PerfilUsuario @default(CLIENTE)
+  ativo            Boolean       @default(true)
+  // consentimento LGPD para o programa de fidelidade
+  aceitaFidelidade Boolean       @default(false)
+  criadoEm         DateTime      @default(now())
+
+  pedidos         Pedido[]        @relation("ClientePedidos")
+  pontos          PontosCliente[]
+  historicoPontos HistoricoPontos[]
+  logsAuditoria   LogAuditoria[]
+
+  @@map("usuarios")
+}
+
+model Unidade {
+  id       Int     @id @default(autoincrement())
+  nome     String
+  endereco String
+  cidade   String
+  ativo    Boolean @default(true)
+
+  // cada unidade tem cardapio e estoque proprios
+  cardapio CardapioUnidade[]
+  pedidos  Pedido[]
+  estoque  EstoqueUnidade[]
+
+  @@map("unidades")
+}
+
+model Produto {
+  id        Int      @id @default(autoincrement())
+  nome      String
+  descricao String?
+  preco     Decimal  @db.Decimal(10, 2)
+  categoria String
+  ativo     Boolean  @default(true)
+
+  cardapio    CardapioUnidade[]
+  pedidoItens PedidoItem[]
+  estoque     EstoqueUnidade[]
+
+  @@map("produtos")
+}
+
+// relacao entre unidade e produto no cardapio
+model CardapioUnidade {
+  id         Int     @id @default(autoincrement())
+  unidadeId  Int
+  produtoId  Int
+  disponivel Boolean @default(true)
+
+  unidade Unidade @relation(fields: [unidadeId], references: [id])
+  produto Produto @relation(fields: [produtoId], references: [id])
+
+  @@unique([unidadeId, produtoId])
+  @@map("cardapio_unidade")
+}
+
+model Pedido {
+  id           Int          @id @default(autoincrement())
+  clienteId    Int
+  unidadeId    Int
+  canalPedido  CanalPedido
+  status       StatusPedido @default(RECEBIDO)
+  total        Decimal      @db.Decimal(10, 2)
+  criadoEm     DateTime     @default(now())
+  atualizadoEm DateTime     @updatedAt
+
+  cliente   Usuario    @relation("ClientePedidos", fields: [clienteId], references: [id])
+  unidade   Unidade    @relation(fields: [unidadeId], references: [id])
+  itens     PedidoItem[]
+  pagamento Pagamento?
+
+  @@map("pedidos")
+}
+
+model PedidoItem {
+  id            Int     @id @default(autoincrement())
+  pedidoId      Int
+  produtoId     Int
+  quantidade    Int
+  precoUnitario Decimal @db.Decimal(10, 2)
+
+  pedido  Pedido  @relation(fields: [pedidoId], references: [id])
+  produto Produto @relation(fields: [produtoId], references: [id])
+
+  @@map("pedido_itens")
+}
+
+model Pagamento {
+  id             Int             @id @default(autoincrement())
+  pedidoId       Int             @unique
+  status         StatusPagamento @default(PENDENTE)
+  valor          Decimal         @db.Decimal(10, 2)
+  formaPagamento String
+  transacaoId    String?
+  processadoEm   DateTime?
+
+  pedido Pedido @relation(fields: [pedidoId], references: [id])
+
+  @@map("pagamentos")
+}
+
+// estoque separado por unidade
+model EstoqueUnidade {
+  id            Int      @id @default(autoincrement())
+  unidadeId     Int
+  produtoId     Int
+  quantidade    Int      @default(0)
+  atualizadoEm DateTime @updatedAt
+
+  unidade       Unidade               @relation(fields: [unidadeId], references: [id])
+  produto       Produto               @relation(fields: [produtoId], references: [id])
+  movimentacoes MovimentacaoEstoque[]
+
+  @@unique([unidadeId, produtoId])
+  @@map("estoque_unidade")
+}
+
+model MovimentacaoEstoque {
+  id         Int              @id @default(autoincrement())
+  estoqueId  Int
+  tipo       TipoMovimentacao
+  quantidade Int
+  motivo     String?
+  criadoEm  DateTime         @default(now())
+
+  estoque EstoqueUnidade @relation(fields: [estoqueId], references: [id])
+
+  @@map("movimentacoes_estoque")
+}
+
+model PontosCliente {
+  id        Int      @id @default(autoincrement())
+  clienteId Int      @unique
+  pontos    Int      @default(0)
+  criadoEm DateTime @default(now())
+
+  cliente Usuario @relation(fields: [clienteId], references: [id])
+
+  @@map("pontos_cliente")
+}
+
+model HistoricoPontos {
+  id        Int       @id @default(autoincrement())
+  clienteId Int
+  pontos    Int
+  tipo      TipoPonto
+  descricao String?
+  criadoEm DateTime  @default(now())
+
+  cliente Usuario @relation(fields: [clienteId], references: [id])
+
+  @@map("historico_pontos")
+}
+
+/// registra acoes sensiveis: criacao de pedido, mudanca de status, cancelamento
+model LogAuditoria {
+  id         Int      @id @default(autoincrement())
+  usuarioId  Int?
+  acao       String
+  entidade   String
+  entidadeId Int?
+  detalhes   String?
+  criadoEm  DateTime @default(now())
+
+  usuario Usuario? @relation(fields: [usuarioId], references: [id])
+
+  @@map("logs_auditoria")
 }

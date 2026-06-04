@@ -4,10 +4,6 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-// monta a string de conexao com o banco a partir das variaveis separadas
-const { DB_USER, DB_PASS, DB_HOST, DB_PORT, DB_NAME } = process.env;
-process.env.DATABASE_URL = `postgresql://${DB_USER}:${DB_PASS}@${DB_HOST}:${DB_PORT}/${DB_NAME}`;
-
 const app = express();
 const PORT = process.env.PORT || 3000;
 
