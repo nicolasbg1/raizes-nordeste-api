@@ -1,1 +1,1 @@
-//
+export { default as rotasAuth } from './authRoutes';

@@ -1,6 +1,7 @@
 import express from 'express';
 import dotenv from 'dotenv';
-
+import { rotasAuth } from './routes';
+import { erroGlobal } from './middlewares';
 
 dotenv.config();
 
@@ -9,9 +10,14 @@ const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 
-app.get('/', (req, res) => {
+app.get('/', (_req, res) => {
   res.json({ message: 'Aplicação rodando... ', version: '1.0.0' });
 });
+
+app.use('/auth', rotasAuth);
+
+// tratamento de erros / final das rotas
+app.use(erroGlobal);
 
 app.listen(PORT, () => {
   console.log(`Servidor rodando na porta ${PORT}`);
