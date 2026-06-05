@@ -8,13 +8,13 @@ export function autorizarPerfil(perfisPermitidos: string[]) {
 
     if (!usuario) {
       return res.status(401).json(
-        criarErro('NAO_AUTENTICADO', 'Usuário não autenticado', req.path)
+        criarErro('NAO_AUTENTICADO', 'Usuário não autenticado', req.originalUrl)
       );
     }
 
     if (!perfisPermitidos.includes(usuario.perfil)) {
       return res.status(403).json(
-        criarErro('SEM_PERMISSAO', 'Você não tem permissão para acessar este recurso', req.path)
+        criarErro('SEM_PERMISSAO', 'Você não tem permissão para acessar este recurso', req.originalUrl)
       );
     }
 

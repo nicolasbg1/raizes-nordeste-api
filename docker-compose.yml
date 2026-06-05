@@ -6,11 +6,11 @@ services:
     container_name: raizes_nordeste_db
     restart: unless-stopped
     environment:
-      POSTGRES_USER: raizes_user
-      POSTGRES_PASSWORD: raizes2026
-      POSTGRES_DB: raizes_nordeste
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASS}
+      POSTGRES_DB: ${DB_NAME}
     ports:
-      - "5433:5432"
+      - "${DB_PORT}:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
 

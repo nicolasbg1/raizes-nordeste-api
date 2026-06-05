@@ -8,7 +8,7 @@ export function autenticar(req: Request, res: Response, next: NextFunction) {
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return res.status(401).json(
-      criarErro('TOKEN_AUSENTE', 'Token de autenticação não fornecido', req.path)
+      criarErro('TOKEN_AUSENTE', 'Token de autenticação não fornecido', req.originalUrl)
     );
   }
 
@@ -17,7 +17,7 @@ export function autenticar(req: Request, res: Response, next: NextFunction) {
 
   if (!payload) {
     return res.status(401).json(
-      criarErro('TOKEN_INVALIDO', 'Token inválido ou expirado', req.path)
+      criarErro('TOKEN_INVALIDO', 'Token inválido ou expirado', req.originalUrl)
     );
   }
 
