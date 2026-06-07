@@ -3,3 +3,5 @@ export { default as rotasUnidade } from './unidadeRoutes';
 export { default as rotasProduto } from './produtoRoutes';
 export { default as rotasEstoque } from './estoqueRoutes';
 export { default as rotasPedido } from './pedidoRoutes';
+export { default as rotasPagamento } from './pagamentoRoutes';
+export { default as rotasFidelidade } from './fidelidadeRoutes';

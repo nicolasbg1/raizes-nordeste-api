@@ -1,6 +1,6 @@
 import express from 'express';
 import dotenv from 'dotenv';
-import { rotasAuth, rotasUnidade, rotasProduto, rotasEstoque, rotasPedido } from './routes';
+import { rotasAuth, rotasUnidade, rotasProduto, rotasEstoque, rotasPedido, rotasPagamento, rotasFidelidade } from './routes';
 import { erroGlobal } from './middlewares';
 
 
@@ -20,6 +20,9 @@ app.use('/unidades', rotasUnidade);
 app.use('/produtos', rotasProduto);
 app.use('/estoque', rotasEstoque);
 app.use('/pedidos', rotasPedido);
+app.use('/pagamentos', rotasPagamento);
+
+app.use('/fidelidade', rotasFidelidade);
 
 
 // tratamento de erros / final das rotas
