@@ -20,12 +20,14 @@ const schemaEditar = z.object({
 export async function listarProdutos(page: number, limit: number) {
   const { produtos, total } = await produtoRepository.buscarTodos(page, limit);
 
-  // paginação basica sem totalPages por enquanto
+  const totalPages = Math.ceil(total / limit);
+
   return {
     data: produtos,
     page,
     limit,
-    total
+    total,
+    totalPages
   };
 }
 

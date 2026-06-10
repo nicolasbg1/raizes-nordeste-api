@@ -102,11 +102,11 @@ export async function criarPedido(body: unknown, usuario: UsuarioLogado) {
     throw new AppError(404, 'UNIDADE_NAO_ENCONTRADA', 'Unidade não encontrada');
   }
 
+  // calcula o total com base no   preco atual dos produtos (404 se algum produto nao existir)
+  const { total, itensComPreco } = await calcularTotal(dados.itens);
+
   // verifica estoque antes de criar o pedido (409 se faltar)
   await verificarEstoque(dados.unidadeId, dados.itens);
-
-  // calcula o total com base no   preco atual dos produtos 
-  const { total, itensComPreco } = await calcularTotal(dados.itens);
 
   console.log('total calculado do pedido:', total);
 
@@ -163,11 +163,14 @@ export async function listarPedidos(
     limit
   );
 
+  const totalPages = Math.ceil(total / limit);
+
   return {
     data: pedidos,
     page,
     limit,
-    total
+    total,
+    totalPages
   };
 }
 
